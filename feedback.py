@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory, redirect
 import smtplib
 from email.mime.text import MIMEText
 import os
@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def feedback_form():
-    return '''
+return '''
     <!DOCTYPE html>
         <html lang="en">
     <head>
@@ -68,15 +68,10 @@ def feedback_form():
   height: 100%;
   background:  whitesmoke;
   width: 100vw;
-  display: none;
+  display: flex;
   gap: 15px;
   flex-direction: column;
   justify-content: center;
-}
-#closeFeedbackButton {
-  position: absolute;
-  top:10px;
-  left: 10px;
 }
 form{
   overflow: hidden;
@@ -163,61 +158,115 @@ button{
       </style>
     </head>
     <body>
-      <form id="feedbackForm" action="/submit-feedback" method="POST" accept-charset="utf-8">
-        <div>
-          <strong>Feedback</strong>
-          <div>
+       <section id="feedbackContainer">
+    <img class="feedbackImg" src="/feedbackImg.png" alt="" />
+    <form id="feedbackForm" action="/submit-feedback" method="POST" accept-charset="utf-8">
+      <div class="feedbackDiv1">
+        <strong>Feedback</strong>
+        <div class="buttonDivs">
+          <div class="VSBQuality">
             <input type="radio" name="feedback" id="VSBQuality" value="VSBQuality" />
             <label for="VSBQuality">VSB Quality</label>
+          </div>
+          <div class="userInterface">
             <input type="radio" name="feedback" id="userInterface" value="userInterface" />
             <label for="userInterface">User Interface</label>
+          </div>
+          <div class="userExperience">
             <input type="radio" name="feedback" id="userExperience" value="userExperience" />
             <label for="userExperience">User Experience</label>
           </div>
-          <div>
-            <textarea placeholder="Tell us your thoughts" name="textArea" maxlength="1000"></textarea>
+          <div class="feedback">
+            <input type="radio" name="feedback" id="pricing" value="pricing" />
+            <label for="pricing">Pricing</label>
           </div>
-          <div>
-            <input placeholder="Email address" type="email" name="email" />
+          <div class="account">
+            <input type="radio" name="feedback" id="account" value="account" />
+            <label for="account">Account</label>
+          </div>
+          <div class="others">
+            <input type="radio" name="feedback" id="others" value="others" />
+            <label for="others">Others</label>
           </div>
         </div>
-        <button type="submit">Send</button>
-      </form>
+        <div class="textareaDiv">
+          <textarea placeholder="Kindly tell us what you think about SpeechScribe" maxlength="1000" name="textArea" id="textArea"></textarea>
+          <p><span class="numberCount">0</span>/1000</p>
+        </div>
+        <p style="font-size: 14px">
+          Please leave your email address, we will contact you
+          shortly
+        </p>
+        <input placeholder="Email address" type="email" name="email" id="email" />
+      </div>
+      <button type="submit">Send</button>
+    </form>
+  </section>
+  <script>
+  const textArea = document.getElementById('textArea');
+  const countDisplay = document.querySelector('.numberCount');
+  const countParagraph = countDisplay.parentElement;
+  textArea.addEventListener('input', () => {
+  const textLength = textArea.value.length;
+  countDisplay.textContent = textLength;
+  if (textLength === 1000) {
+    countParagraph.style.color = 'red';
+  } else {
+    countParagraph.style.color = '';
+  }
+  });
+  </script>
     </body>
     </html>
     '''
 
-@app.route('/submit-feedback', methods=['POST'])
+@app.route('/<path:filename>')
+def serve_root_files(filename):
+return send_from_directory('.', filename)
+
+@app.route('/submit-feedback', methods = ['POST'])
+
 def submit_feedback():
-    feedback_type = request.form.get('feedback')
-    feedback_text = request.form.get('textArea')
-    email_address = request.form.get('email')
+feedback_type = request.form.get('feedback')
+feedback_text = request.form.get('textArea')
+email_address = request.form.get('email')
+if not feedback_type or not feedback_text or not email_address:
+return "All fields are required!", 400
 
-    sender_email = "stathamruss.co.uk@gmail.com"
-    sender_password = "kvrm orbd zydq nwsu"  # Use an environment variable for security
-    recipient_email = "stathamruss.co.uk@gmail.com"  # The company email receiving feedback
 
-    subject = f"Feedback: {feedback_type}"
-    body = f"""
-    Feedback Type: {feedback_type}
-    Feedback: {feedback_text}
-    Sender Email: {email_address}
+sender_email = "stathamruss.co.uk@gmail.com"
+sender_password = "kvrm orbd zydq nwsu" # Use an environment variable for security
+recipient_email = "stathamruss.co.uk@gmail.com" # The company email receiving feedback
+
+subject = f"Feedback: {
+  feedback_type
+}"
+body = f"""
+    Feedback Type: {
+  feedback_type
+}
+    Feedback: {
+  feedback_text
+}
+    Sender Email: {
+  email_address
+}
     """
 
-    try:
-        msg = MIMEText(body)
-        msg['Subject'] = subject
-        msg['From'] = sender_email
-        msg['To'] = recipient_email
+try:
+msg = MIMEText(body)
+msg['Subject'] = subject
+msg['From'] = sender_email
+msg['To'] = recipient_email
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, recipient_email, msg.as_string())
-
-        return "Feedback sent successfully!"
-    except Exception as e:
-        return f"Failed to send feedback: {e}"
-
+with smtplib.SMTP("smtp.gmail.com", 587) as server:
+server.starttls()
+server.login(sender_email, sender_password)
+server.sendmail(sender_email, recipient_email, msg.as_string())
+return redirect('https://speechscribeapp.web.app/HTML/success.html')
+except Exception as e:
+return f"Failed to send feedback: {
+  e
+}"
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+app.run(host = '0.0.0.0', port = 5000)
