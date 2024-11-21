@@ -219,7 +219,7 @@ def feedback_form():
               <p><span class="numberCount">0</span>/1000</p>
             </div>
             <p>Please leave your email address, we will contact you shortly</p>
-            <input placeholder="Email address" type="email" name="email" id="email" />
+            <input placeholder="Email address" type="email" name="email" id="email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />
           </div>
           <button type="submit">Send</button>
         </form>
@@ -273,7 +273,8 @@ def submit_feedback():
         
         return redirect('https://speechscribeapp.web.app/HTML/success.html')
     except Exception as e:
+        logging.error(f"Feedback submission error: {e}")
         return f"Failed to send feedback: {e}"
-
+        
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
