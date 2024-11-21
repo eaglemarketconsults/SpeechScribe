@@ -1,36 +1,9 @@
 from flask import Flask, request, send_from_directory, redirect
-import smtplib
+import smtplib, logging
 from email.mime.text import MIMEText
 import os
 
-app = Flask(__name__)
-
-@app.route('/')
-def feedback_form():
-    return '''
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Feedback</title>
-        <!-- Your CSS code here -->
-    </head>
-    <body>
-        <section id="feedbackContainer">
-            <!-- Your form HTML here -->
-        </section>
-        <script>
-        // Your JavaScript code here
-        </script>
-    </body>
-    </html>
-    '''
-
-from flask import Flask, request, send_from_directory, redirect
-import smtplib
-from email.mime.text import MIMEText
-import os
+logging.basicConfig(level=logging.INFO)  
 
 app = Flask(__name__)
 
